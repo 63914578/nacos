@@ -34,6 +34,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -339,6 +340,7 @@ public class ServerHttpAgent implements HttpAgent {
         }
         String securityCredentialsUrl = STSConfig.getInstance().getSecurityCredentialsUrl();
         HttpURLConnection conn = null;
+        InputStream inputStream = null;
         int respCode;
         String response;
         try {
@@ -349,16 +351,18 @@ public class ServerHttpAgent implements HttpAgent {
             conn.connect();
             respCode = conn.getResponseCode();
             if (HttpURLConnection.HTTP_OK == respCode) {
-                response = IOUtils.toString(conn.getInputStream(), Constants.ENCODE);
+                inputStream = conn.getInputStream();
+                response = IOUtils.toString(inputStream, Constants.ENCODE);
             } else {
-                response = IOUtils.toString(conn.getErrorStream(), Constants.ENCODE);
+                inputStream = conn.getErrorStream();
+                response = IOUtils.toString(inputStream, Constants.ENCODE);
             }
         } catch (IOException e) {
             LOGGER.error("can not get security credentials", e);
             throw e;
         } finally {
-            if (null != conn) {
-                conn.disconnect();
+            if (null != inputStream) {
+                inputStream.close();
             }
         }
         if (HttpURLConnection.HTTP_OK == respCode) {

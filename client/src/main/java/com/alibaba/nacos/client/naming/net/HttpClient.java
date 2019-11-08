@@ -103,37 +103,38 @@ public class HttpClient {
             NAMING_LOGGER.error("[NA] failed to request ", e);
 
             return new HttpResult(500, e.toString(), Collections.<String, String>emptyMap());
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
         }
     }
 
     private static HttpResult getResult(HttpURLConnection conn) throws IOException {
         int respCode = conn.getResponseCode();
 
-        InputStream inputStream;
-        if (HttpURLConnection.HTTP_OK == respCode
-            || HttpURLConnection.HTTP_NOT_MODIFIED == respCode
-            || Constants.WRITE_REDIRECT_CODE == respCode) {
-            inputStream = conn.getInputStream();
-        } else {
-            inputStream = conn.getErrorStream();
+        InputStream inputStream = null;
+        try {
+            if (HttpURLConnection.HTTP_OK == respCode || HttpURLConnection.HTTP_NOT_MODIFIED == respCode
+                || Constants.WRITE_REDIRECT_CODE == respCode) {
+                inputStream = conn.getInputStream();
+            } else {
+                inputStream = conn.getErrorStream();
+            }
+
+            Map<String, String> respHeaders = new HashMap<String, String>(conn.getHeaderFields().size());
+            for (Map.Entry<String, List<String>> entry : conn.getHeaderFields().entrySet()) {
+                respHeaders.put(entry.getKey(), entry.getValue().get(0));
+            }
+
+            String encodingGzip = "gzip";
+
+            if (encodingGzip.equals(respHeaders.get(HttpHeaders.CONTENT_ENCODING))) {
+                inputStream = new GZIPInputStream(inputStream);
+            }
+
+            return new HttpResult(respCode, IoUtils.toString(inputStream, getCharset(conn)), respHeaders);
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
         }
-
-        Map<String, String> respHeaders = new HashMap<String, String>(conn.getHeaderFields().size());
-        for (Map.Entry<String, List<String>> entry : conn.getHeaderFields().entrySet()) {
-            respHeaders.put(entry.getKey(), entry.getValue().get(0));
-        }
-
-        String encodingGzip = "gzip";
-
-        if (encodingGzip.equals(respHeaders.get(HttpHeaders.CONTENT_ENCODING))) {
-            inputStream = new GZIPInputStream(inputStream);
-        }
-
-        return new HttpResult(respCode, IoUtils.toString(inputStream, getCharset(conn)), respHeaders);
     }
 
     private static String getCharset(HttpURLConnection conn) {

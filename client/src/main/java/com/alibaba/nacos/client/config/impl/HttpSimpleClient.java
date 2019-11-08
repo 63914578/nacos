@@ -23,6 +23,7 @@ import com.alibaba.nacos.client.utils.ParamUtil;
 import com.alibaba.nacos.common.util.UuidUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -51,6 +52,7 @@ public class HttpSimpleClient {
         }
 
         HttpURLConnection conn = null;
+        InputStream inputStream = null;
 
         try {
             conn = (HttpURLConnection)new URL(url).openConnection();
@@ -66,14 +68,16 @@ public class HttpSimpleClient {
             String resp = null;
 
             if (HttpURLConnection.HTTP_OK == respCode) {
-                resp = IOUtils.toString(conn.getInputStream(), encoding);
+                inputStream = conn.getInputStream();
+                resp = IOUtils.toString(inputStream, encoding);
             } else {
-                resp = IOUtils.toString(conn.getErrorStream(), encoding);
+                inputStream = conn.getErrorStream();
+                resp = IOUtils.toString(inputStream, encoding);
             }
             return new HttpResult(respCode, conn.getHeaderFields(), resp);
         } finally {
-            if (conn != null) {
-                conn.disconnect();
+            if (inputStream != null) {
+                inputStream.close();
             }
         }
     }
@@ -108,6 +112,7 @@ public class HttpSimpleClient {
                 "More than client-side current limit threshold");
         }
         HttpURLConnection conn = null;
+        InputStream inputStream = null;
         try {
             conn = (HttpURLConnection)new URL(url).openConnection();
             conn.setRequestMethod("POST");
@@ -124,14 +129,16 @@ public class HttpSimpleClient {
             String resp = null;
 
             if (HttpURLConnection.HTTP_OK == respCode) {
-                resp = IOUtils.toString(conn.getInputStream(), encoding);
+                inputStream = conn.getInputStream();
+                resp = IOUtils.toString(inputStream, encoding);
             } else {
-                resp = IOUtils.toString(conn.getErrorStream(), encoding);
+                inputStream = conn.getErrorStream();
+                resp = IOUtils.toString(inputStream, encoding);
             }
             return new HttpResult(respCode, conn.getHeaderFields(), resp);
         } finally {
-            if (null != conn) {
-                conn.disconnect();
+            if (inputStream != null) {
+                inputStream.close();
             }
         }
     }
@@ -163,6 +170,7 @@ public class HttpSimpleClient {
         }
 
         HttpURLConnection conn = null;
+        InputStream inputStream = null;
 
         try {
             conn = (HttpURLConnection)new URL(url).openConnection();
@@ -178,14 +186,16 @@ public class HttpSimpleClient {
             String resp = null;
 
             if (HttpURLConnection.HTTP_OK == respCode) {
-                resp = IOUtils.toString(conn.getInputStream(), encoding);
+                inputStream = conn.getInputStream();
+                resp = IOUtils.toString(inputStream, encoding);
             } else {
-                resp = IOUtils.toString(conn.getErrorStream(), encoding);
+                inputStream = conn.getErrorStream();
+                resp = IOUtils.toString(inputStream, encoding);
             }
             return new HttpResult(respCode, conn.getHeaderFields(), resp);
         } finally {
-            if (conn != null) {
-                conn.disconnect();
+            if(inputStream != null) {
+                inputStream.close();
             }
         }
     }
