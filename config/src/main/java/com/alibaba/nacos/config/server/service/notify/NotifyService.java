@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Iterator;
@@ -52,6 +53,7 @@ public class NotifyService {
 
     static public HttpResult invokeURL(String url, List<String> headers, String encoding) throws IOException {
         HttpURLConnection conn = null;
+        InputStream inputStream = null;
         try {
             conn = (HttpURLConnection)new URL(url).openConnection();
 
@@ -76,14 +78,16 @@ public class NotifyService {
             String resp = null;
 
             if (HttpServletResponse.SC_OK == respCode) {
-                resp = IOUtils.toString(conn.getInputStream());
+                inputStream = conn.getInputStream();
+                resp = IOUtils.toString(inputStream);
             } else {
-                resp = IOUtils.toString(conn.getErrorStream());
+                inputStream = conn.getErrorStream();
+                resp = IOUtils.toString(inputStream);
             }
             return new HttpResult(respCode, resp);
         } finally {
-            if (conn != null) {
-                conn.disconnect();
+            if (inputStream != null) {
+                inputStream.close();
             }
         }
     }
